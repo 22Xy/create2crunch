@@ -1,4 +1,33 @@
-# create2crunch
+## Salt Miner for Uniswap v4
+
+For the detailed rules and criteria of the challenge, see https://blog.uniswap.org/uniswap-v4-address-mining-challenge
+
+To run it locally, first copy `.env.example`
+```bash
+cp .env.example .env
+```
+
+Replace `CALLER` with the Ethereum address executing the submission
+```
+CALLER="<YOUR_PUB_KEY>"
+```
+
+Build the salt miner optimally
+```bash
+cargo build --release
+```
+
+Run the salt miner
+```bash
+cargo run --release
+```
+
+(Optional) Run a monitoring tool in another tab
+```bash
+python3 analysis.py
+```
+
+## create2crunch
 
 > A Rust program for finding salts that create gas-efficient Ethereum addresses via CREATE2.
 
