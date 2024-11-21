@@ -43,28 +43,30 @@ impl Reward {
         // Ensure the address is lowercase and strip the '0x' prefix.
         let addr = address.trim_start_matches("0x").to_lowercase();
 
-        // Find the first non-zero nibble
-        let first_non_zero = addr.chars().find(|&c| c != '0')?;
-        if first_non_zero != '4' {
+        // Find the first non-zero nibble index
+        let first_non_zero_idx = addr.find(|c: char| c != '0')?;
+        if addr.chars().nth(first_non_zero_idx)? != '4' {
             // Address does not meet the first non-zero nibble requirement
             return None;
         }
 
         // Add 10 points for each leading '0' nibble before the first non-zero nibble
-        for c in addr.chars() {
-            if c == '0' {
-                score += 10;
-            } else {
-                break;
-            }
-        }
+        let leading_zeros = addr
+            .chars()
+            .take(first_non_zero_idx)
+            .filter(|&c| c == '0')
+            .count();
+        score += leading_zeros * 10;
 
-        // Check if the address starts with four consecutive '4's.
-        if addr.starts_with("4444") {
+        // Substring starting from the first non-zero nibble
+        let remainder = &addr[first_non_zero_idx..];
+
+        // Check if the substring starts with four consecutive '4's.
+        if remainder.starts_with("4444") {
             score += 40;
 
             // Check the first nibble after the four '4's.
-            if addr.chars().nth(4) != Some('4') {
+            if remainder.chars().nth(4) != Some('4') {
                 score += 20;
             }
         }
@@ -75,11 +77,12 @@ impl Reward {
         }
 
         // Add 1 point for each '4' elsewhere in the address.
-        for c in addr.chars().skip(1).take(addr.len() - 1) {
-            if c == '4' {
-                score += 1;
-            }
-        }
+        // Exclude leading '0's by starting from first_non_zero_idx
+        let additional_fours = addr[first_non_zero_idx..]
+            .chars()
+            .filter(|&c| c == '4')
+            .count();
+        score += additional_fours;
 
         // Ensure the score does not exceed the maximum threshold
         if score > self.max_threshold {
