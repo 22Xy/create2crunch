@@ -12,7 +12,7 @@ def main():
             
             start_time = time.time()
             total_addresses = 0
-            total_rewards = 0
+            total_scores = 0
             score_distribution = defaultdict(int)
             
             print(f"Starting monitoring of '{filepath}'...\n")
@@ -28,23 +28,22 @@ def main():
                     if not line:
                         continue  # Skip empty lines
                     # Expected format:
-                    # {salt} => {address} => Score: {score}, Reward: {reward}
+                    # {salt} => {address} => Score: {score}
                     try:
-                        salt_part, address_part, score_reward_part = line.split('=>')
+                        salt_part, address_part, score_part = line.split('=>')
                         salt = salt_part.strip()
                         address = address_part.strip()
-                        # Split score and reward
-                        score_str, reward_str = score_reward_part.strip().split(',')
+                        # Extract score
+                        score_str = score_part.strip()
                         score = int(score_str.split(':')[-1].strip())
-                        reward = int(reward_str.split(':')[-1].strip())
                         
                         # Update statistics
                         total_addresses += 1
-                        total_rewards += reward
+                        total_scores += score
                         score_distribution[score] += 1
                         
                         # Display the newly found address
-                        print(f"{salt} => {address} => Score: {score}, Reward: {reward}")
+                        # print(f"{salt} => {address} => Score: {score}")
                     except Exception as e:
                         print(f"Failed to parse line: \"{line}\". Error: {e}", file=sys.stderr)
                         continue  # Skip malformed lines
@@ -58,7 +57,7 @@ def main():
                 print("\n=== Summary ===")
                 print(f"Runtime: {minutes:.2f} minutes")
                 print(f"Total addresses found: {total_addresses}")
-                print(f"Total rewards accumulated: {total_rewards}")
+                print(f"Total scores accumulated: {total_scores}")
                 print(f"Submission rate: {rate:.2f} addresses per minute")
                 print("Score distribution:")
                 for score in sorted(score_distribution.keys()):
@@ -67,7 +66,7 @@ def main():
                 print("================\n")
                 
                 # Sleep before the next check
-                time.sleep(10)  # Check every 10 seconds
+                time.sleep(60)  # Check every 60 seconds
     except FileNotFoundError:
         print(f"Error: File \"{filepath}\" not found. Please ensure that 'create2crunch' is generating it.", file=sys.stderr)
         sys.exit(1)

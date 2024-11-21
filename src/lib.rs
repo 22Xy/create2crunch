@@ -55,6 +55,8 @@ pub struct Config {
     pub gpu_device: u8,
     pub leading_zeroes_threshold: u8,
     pub total_zeroes_threshold: u8,
+    pub score_min_threshold: usize,
+    pub score_max_threshold: usize,
 }
 
 /// Validate the provided arguments and construct the Config struct.
@@ -72,6 +74,23 @@ impl Config {
             .unwrap_or_else(|_| "255".to_string())
             .parse::<u8>()
             .unwrap_or(255);
+
+        // Retrieve score thresholds from environment variables
+        let score_min_threshold_str =
+            env::var("SCORE_MIN_THRESHOLD").map_err(|_| "SCORE_MIN_THRESHOLD not set in .env")?;
+        let score_max_threshold_str =
+            env::var("SCORE_MAX_THRESHOLD").map_err(|_| "SCORE_MAX_THRESHOLD not set in .env")?;
+
+        let score_min_threshold = score_min_threshold_str
+            .parse::<usize>()
+            .map_err(|_| "Invalid SCORE_MIN_THRESHOLD format")?;
+        let score_max_threshold = score_max_threshold_str
+            .parse::<usize>()
+            .map_err(|_| "Invalid SCORE_MAX_THRESHOLD format")?;
+
+        if score_min_threshold >= score_max_threshold {
+            return Err("SCORE_MIN_THRESHOLD must be less than SCORE_MAX_THRESHOLD");
+        }
 
         // Convert Hex strings to byte arrays
         let factory_address = hex::decode(factory.trim_start_matches("0x"))
@@ -94,8 +113,10 @@ impl Config {
             calling_address,
             init_code_hash,
             gpu_device,
-            leading_zeroes_threshold: 4,
-            total_zeroes_threshold: 4,
+            leading_zeroes_threshold: 0, // You can adjust or make this configurable as needed
+            total_zeroes_threshold: 0,   // You can adjust or make this configurable as needed
+            score_min_threshold,
+            score_max_threshold,
         })
     }
 }
@@ -112,14 +133,14 @@ impl Config {
 ///
 /// When a salt that will result in the creation of a gas-efficient contract
 /// address is found, it will be appended to `efficient_addresses.txt` along
-/// with the resultant address and the "value" (i.e. approximate rarity) of the
+/// with the resultant address and the "value" (i.e. the score) of the
 /// resultant address.
 pub fn cpu(config: Config) -> Result<(), Box<dyn Error>> {
     // (create if necessary) and open a file where found salts will be written
     let file = output_file();
 
     // Create object for computing rewards (relative rarity) for a given address
-    let rewards = Reward::new();
+    let rewards = Reward::new().expect("Failed to initialize Reward");
 
     // Begin searching for addresses
     loop {
@@ -167,14 +188,6 @@ pub fn cpu(config: Config) -> Result<(), Box<dyn Error>> {
                     None => return, // Invalid address based on first nibble
                 };
 
-                // Look up the reward amount
-                let reward_amount = rewards.get(&score);
-
-                // Only proceed if a reward is associated with the score
-                if reward_amount.is_none() {
-                    return;
-                }
-
                 // Check for duplicate submissions
                 {
                     let mut processed = PROCESSED_ADDRESSES
@@ -192,10 +205,7 @@ pub fn cpu(config: Config) -> Result<(), Box<dyn Error>> {
                 let full_salt = format!("0x{}{}", &header_hex_string[42..], &body_hex_string);
 
                 // Display the salt and the address.
-                let output = format!(
-                    "{full_salt} => {address_str} => Score: {score}, Reward: {}",
-                    reward_amount.unwrap_or("0")
-                );
+                let output = format!("{full_salt} => {address_str} => Score: {score} \n");
                 println!("{output}");
 
                 // Create a lock on the file before writing
