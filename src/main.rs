@@ -4,7 +4,7 @@ use std::process;
 
 fn main() {
     let config = Config::new(env::args()).unwrap_or_else(|err| {
-        eprintln!("Failed parsing arguments: {err}");
+        eprintln!("Failed parsing configuration: {err}");
         process::exit(1);
     });
 
