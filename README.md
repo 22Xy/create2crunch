@@ -12,6 +12,11 @@ Replace `CALLER` with the Ethereum address executing the submission
 CALLER="<YOUR_PUB_KEY>"
 ```
 
+(Optional) Change the `SCORE_MIN_THRESHOLD` to the minimum score to consider. i.e., only salt with a score greater than the threshold will be logged and recorded.
+```
+SCORE_MIN_THRESHOLD="118"
+```
+
 Build the salt miner optimally
 ```bash
 cargo build --release
