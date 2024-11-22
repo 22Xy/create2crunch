@@ -1,6 +1,7 @@
 use std::env;
 
 /// Struct to handle reward calculations based on Uniswap v4 criteria.
+/// Full details here: https://blog.uniswap.org/uniswap-v4-address-mining-challenge
 pub struct Reward {
     min_threshold: usize,
     max_threshold: usize,

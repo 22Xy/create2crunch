@@ -66,7 +66,7 @@ def main():
                 print("================\n")
                 
                 # Sleep before the next check
-                time.sleep(3600)  # Check every 1 hr
+                time.sleep(3600)  # Check every 1 minute
     except FileNotFoundError:
         print(f"Error: File \"{filepath}\" not found. Please ensure that 'create2crunch' is generating it.", file=sys.stderr)
         sys.exit(1)

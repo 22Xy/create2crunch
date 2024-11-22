@@ -1,9 +1,8 @@
 use create2crunch::Config;
-use std::env;
 use std::process;
 
 fn main() {
-    let config = Config::new(env::args()).unwrap_or_else(|err| {
+    let config = Config::new().unwrap_or_else(|err| {
         eprintln!("Failed parsing configuration: {err}");
         process::exit(1);
     });
